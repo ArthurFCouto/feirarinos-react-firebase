@@ -4,13 +4,11 @@ import { Market } from '@/config/firebase';
 import {
     Box, Button, Card, CardContent,
     CardMedia, Chip, Divider, IconButton,
-    Menu, MenuItem, Stack, Tooltip,
-    Typography, useMediaQuery
+    Stack, Tooltip, Typography, useMediaQuery
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { AccountCircle, LocationOn, Loupe, WhatsApp } from '@mui/icons-material';
 import { orderArrayString } from '@/util';
-import { useRouter } from 'next/navigation';
 
 interface CustomCardProps {
     market: Market;
@@ -22,12 +20,88 @@ interface CustomMenuProps {
     smDownScreen: boolean;
 }
 
+interface CustomCardFooterProps {
+    card: boolean;
+    delivery: boolean;
+    pix: boolean;
+    redirectWhatsapp: () => void;
+    smDownScreen: boolean;
+    sizeChip: 'small' | 'medium';
+    sizeImage: number;
+}
+
+interface ChipCategorieProps {
+    label: string;
+    filtercategorie: () => void;
+    selected: string;
+}
+
+const CustomCardFooter = ({ card, delivery, pix, redirectWhatsapp, sizeChip, sizeImage, smDownScreen }: CustomCardFooterProps) => (
+    <Box
+        alignItems='center'
+        display='flex'
+        flexDirection={smDownScreen ? 'row-reverse' : 'row'}
+        justifyContent='space-between'
+        padding={2}
+        width='100%'
+    >
+        <Stack flexDirection={smDownScreen ? 'row-reverse' : 'row'} gap={1} alignItems='center'>
+            {
+                pix && (
+                    <Tooltip title='Aceita pagamento via PIX'>
+                        <CardMedia
+                            alt='Pagamento via PIX'
+                            component='img'
+                            image='/pix.png'
+                            sx={{ width: sizeImage }}
+                        />
+                    </Tooltip>
+                )
+            }
+            {
+                card && (
+                    <Tooltip title='Aceita pagamento via cartão crédito/débito'>
+                        <CardMedia
+                            alt='Pagamento via cartão'
+                            component='img'
+                            image='/credit-card.png'
+                            sx={{ width: sizeImage }}
+                        />
+                    </Tooltip>
+                )
+            }
+            {
+                delivery && (
+                    <Tooltip title='Realiza entregas*'>
+                        <CardMedia
+                            alt='É possível combinar a entrega'
+                            component='img'
+                            image='/delivery.png'
+                            sx={{ width: sizeImage }}
+                        />
+                    </Tooltip>
+                )
+            }
+        </Stack>
+        <Tooltip title='Chamar no Whatsapp'>
+            <Button
+                color='success'
+                endIcon={<WhatsApp />}
+                onClick={redirectWhatsapp}
+                size={sizeChip}
+                variant='contained'
+            >
+                Whatsapp
+            </Button>
+        </Tooltip>
+    </Box>
+)
+
 export function CustomCard({ details, market, redirectWhatsapp }: CustomCardProps) {
     const { card, customName, delivery, pix, products } = market;
     const theme = useTheme();
     const smDownScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const sizeChip = smDownScreen ? 'small' : 'medium';
-    const sizeImage = smDownScreen ? 30 : 50;
     const [categories, setCategories] = useState<string[]>([]);
     const extractCategories = () => {
         const list: string[] = [];
@@ -38,66 +112,6 @@ export function CustomCard({ details, market, redirectWhatsapp }: CustomCardProp
         const listCategories = [...new Set(list)];
         setCategories(orderArrayString(listCategories));
     }
-    const CardFooter = () => (
-        <Box
-            alignItems='center'
-            display='flex'
-            flexDirection={smDownScreen ? 'row-reverse' : 'row'}
-            justifyContent='space-between'
-            padding={2}
-            width='100%'
-        >
-            <Stack flexDirection={smDownScreen ? 'row-reverse' : 'row'} gap={1} alignItems='center'>
-                {
-                    pix && (
-                        <Tooltip title='Aceita pagamento via PIX'>
-                            <CardMedia
-                                alt='Pagamento via PIX'
-                                component='img'
-                                image='/pix.png'
-                                sx={{ width: sizeImage }}
-                            />
-                        </Tooltip>
-                    )
-                }
-                {
-                    card && (
-                        <Tooltip title='Aceita pagamento via artão credito/débito'>
-                            <CardMedia
-                                alt='Pagamento via cartão'
-                                component='img'
-                                image='/credit-card.png'
-                                sx={{ width: sizeImage }}
-                            />
-                        </Tooltip>
-                    )
-                }
-                {
-                    delivery && (
-                        <Tooltip title='Realiza entregas*'>
-                            <CardMedia
-                                alt='Pagamento via PIX'
-                                component='img'
-                                image='/delivery.png'
-                                sx={{ width: sizeImage }}
-                            />
-                        </Tooltip>
-                    )
-                }
-            </Stack>
-            <Tooltip title='Chamar no Whatsapp'>
-                <Button
-                    color='success'
-                    endIcon={<WhatsApp />}
-                    onClick={redirectWhatsapp}
-                    size={sizeChip}
-                    variant='contained'
-                >
-                    Whatsapp
-                </Button>
-            </Tooltip>
-        </Box>
-    )
 
     useEffect(() => {
         extractCategories();
@@ -139,7 +153,15 @@ export function CustomCard({ details, market, redirectWhatsapp }: CustomCardProp
                         </Tooltip>
                     </Stack>
                 </CardContent>
-                <CardFooter />
+                <CustomCardFooter
+                    card={card}
+                    delivery={delivery}
+                    pix={pix}
+                    redirectWhatsapp={redirectWhatsapp}
+                    sizeChip={sizeChip}
+                    sizeImage={smDownScreen ? 30 : 50}
+                    smDownScreen={smDownScreen}
+                />
             </Box>
             {
                 smDownScreen && (
@@ -157,62 +179,42 @@ export function CustomCard({ details, market, redirectWhatsapp }: CustomCardProp
 }
 
 export function CustomMenu({ smDownScreen }: CustomMenuProps) {
-    const router = useRouter();
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const stateOpenMenuAccount = Boolean(anchorEl);
-    const openMenuAccount = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const closeMenuAccount = () => {
-        setAnchorEl(null);
-    };
-    const MenuAccount = () => (
-        <Menu
-            anchorEl={anchorEl}
-            id='account-menu'
-            MenuListProps={{
-                'aria-labelledby': 'basic-button',
-            }}
-            onClose={closeMenuAccount}
-            open={stateOpenMenuAccount}
-        >
-            <MenuItem onClick={() => router.push('/login')}>Sou Feirante</MenuItem>
-        </Menu>
-    )
-
     return smDownScreen ? (
         <Box>
-            <IconButton color='secondary' size='large'>
-                <LocationOn />
-            </IconButton>
-            <IconButton
-                aria-controls={stateOpenMenuAccount ? 'basic-menu' : undefined}
-                aria-haspopup='true'
-                aria-expanded={stateOpenMenuAccount ? 'true' : undefined}
-                color='info'
-                onClick={openMenuAccount}
-            >
+            <Tooltip title='Arinos/MG'>
+                <IconButton color='secondary' size='large' sx={{ marginRight: 1 }}>
+                    <LocationOn />
+                </IconButton>
+            </Tooltip>
+            <IconButton color='info' href='/login'>
                 <AccountCircle />
             </IconButton>
-            <MenuAccount />
         </Box>
     ) : (
         <Box>
-            <Button color='secondary' startIcon={<LocationOn />} variant='text'>
+            <Button color='secondary' startIcon={<LocationOn />} sx={{ marginRight: 2 }} variant='text'>
                 Arinos MG
             </Button>
             <Button
-                aria-controls={stateOpenMenuAccount ? 'basic-menu' : undefined}
-                aria-haspopup='true'
-                aria-expanded={stateOpenMenuAccount ? 'true' : undefined}
                 color='info'
-                onClick={openMenuAccount}
+                href='/login'
                 startIcon={<AccountCircle />}
                 variant='contained'
             >
                 Acessar Conta
             </Button>
-            <MenuAccount />
         </Box>
+    )
+}
+
+export function ChipCategorie({ label, filtercategorie, selected }: ChipCategorieProps) {
+    return (
+        <Chip
+            clickable
+            size='small'
+            label={label}
+            variant={selected === label ? 'filled' : 'outlined'}
+            onClick={filtercategorie}
+        />
     )
 }

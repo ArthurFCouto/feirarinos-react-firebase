@@ -1,7 +1,13 @@
+'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Footer } from '@/components/ui';
-import { Box, Button, Grid, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Grid, Typography } from '@mui/material';
 
 export default function Home() {
+  const router = useRouter();
+  useEffect(() => router.push('/busca'), []);
+
   return (
     <Box
       display='flex'
@@ -43,11 +49,12 @@ export default function Home() {
         >
           <Button
             color='primary'
+            endIcon={<CircularProgress color='inherit' size='0.9375rem'/>}
             href='/busca'
             variant='contained'
             size='large'
           >
-            Descobrir
+            Você será redirecionado
           </Button>
         </Grid>
       </Grid>
