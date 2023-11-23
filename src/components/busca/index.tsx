@@ -112,10 +112,10 @@ export function CustomCard({ details, market, redirectWhatsapp }: CustomCardProp
         const listCategories = [...new Set(list)];
         setCategories(orderArrayString(listCategories));
     }
-
     useEffect(() => {
         extractCategories();
     }, []);
+    
     return (
         <Card
             component={Box}

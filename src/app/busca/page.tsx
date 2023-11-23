@@ -17,6 +17,8 @@ import { Footer } from '@/components/ui';
 import firebase, { Market } from '@/config/firebase';
 import { orderArrayString } from '@/util';
 
+const emptyMessage = 'Não encontramos resultados para exibir.';
+
 export default function Busca() {
     const theme = useTheme();
     const [loading, setLoading] = useState(true);
@@ -32,15 +34,16 @@ export default function Busca() {
         if (loading) return;
         setSelectedCategory('');
         const data = new FormData(event.currentTarget);
-        getmarketListByFilter(String(data.get('search')));
-        setSearchTerm(`Buscando por ${data.get('search')}...`);
+        const search = String(data.get('search'));
+        getmarketListByFilter(search);
+        setSearchTerm(`Buscando por ${search}`);
     };
 
     const changeCategorie = (item: string) => {
         if (loading) return;
         setSelectedCategory((prevCategorie) => prevCategorie === item ? '' : item);
         getmarketListByFilter(selectedCategory === item ? '' : item);
-        setSearchTerm(`Buscando por ${item}...`);
+        setSearchTerm(selectedCategory === item ? '' : `Filtrando pela categoria ${item}`);
     };
 
     const getmarketListByFilter = async (item: string) => {
@@ -50,8 +53,8 @@ export default function Busca() {
             const list: Array<Market> = [];
             const querySnapshot = await getDocs(collection(db, 'banca'));
             querySnapshot.forEach((doc) => {
-                const data = JSON.stringify(doc.data() as Market);
-                if (data.includes(item))
+                const data = JSON.stringify(doc.data()).toLowerCase();
+                if (data.includes(item.toLowerCase()))
                     list.push(doc.data() as Market);
             });
             setMarketList([...list]);
@@ -128,7 +131,7 @@ export default function Busca() {
                         <CustomMenu smDownScreen={smDownScreen} />
                     </Box>
                 </Stack >
-                <Paper component={Box} marginTop={1} width='100%'>
+                <Paper component={Box} width='100%'>
                     <Box
                         alignItems='center'
                         display='flex'
@@ -163,7 +166,7 @@ export default function Busca() {
                     paddingY={1}
                 >
                     {
-                        loading && categoryList.length === 0 ? <Typography component='h5' fontWeight={500} variant='h5'>Carregando categorias</Typography> :
+                        loading && categoryList.length === 0 ? <Typography fontWeight={500} variant='subtitle2'>Carregando categorias</Typography> :
                             <>
                                 {
                                     categoryList.map((item, index) => <ChipCategorie filtercategorie={() => changeCategorie(item)} key={index} label={item} selected={selectedCategory} />)
@@ -173,12 +176,12 @@ export default function Busca() {
                 </Stack>
                 <Box display='flex' flexDirection='column' gap={2} paddingY={2}>
                     {
-                        searchTerm.length > 0 && <Typography component='h5' fontWeight={500} variant='h5'>{searchTerm}</Typography>
+                        searchTerm.length > 0 && <Typography fontWeight={500} variant='subtitle2'>{searchTerm}</Typography>
                     }
                     {
-                        loading ? <LinearProgress />
+                        loading ? <LinearProgress sx={{ marginTop: 2 }} />
                             : marketList.length === 0 ?
-                                <Typography component='h5' fontWeight={500} variant='h5'>Não encontramos resultados para exibir</Typography>
+                                <Typography component='h5' fontWeight={500} variant='h5'>{emptyMessage}</Typography>
                                 :
                                 <>
                                     {
