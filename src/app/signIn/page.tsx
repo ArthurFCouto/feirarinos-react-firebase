@@ -34,7 +34,7 @@ export default function SignIn() {
   const handleFormUser = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    if (String(data.get('password')).length <= 6) {
+    if (String(data.get('password')).length < 6) {
       setAlert({
         open: true,
         message: 'A senha deve ter no mínimo 6 dígitos.'
@@ -92,7 +92,8 @@ export default function SignIn() {
       ...prevUser,
       products: options
     }));
-    nextStep();
+    //nextStep();
+    handleRegister();
   };
   const handleRegister = () => {
     if (loading)

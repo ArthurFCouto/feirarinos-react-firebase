@@ -363,7 +363,7 @@ export function FormProduct({ categoryProducts, onSubmit, previousStep }: FormPr
                         width='100%'
                     >
                         <Button variant='contained' type='submit'>
-                            Continuar
+                            Cadastrar
                         </Button>
                         <Button onClick={previousStep}>
                             Voltar

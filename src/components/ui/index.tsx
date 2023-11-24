@@ -49,7 +49,7 @@ export const Footer = () => (
             </Typography>
             <Typography variant='body2' color='text.secondary'>
                 {`Copyright © ${new Date().getFullYear()}`}
-                <MLink color='inherit' component={Link} href='/'>FeirArinos</MLink>
+                <MLink color='inherit' component={Link} href='/' sx={{marginLeft: 0.5}}>FeirArinos</MLink>
             </Typography>
         </Container>
     </Box>

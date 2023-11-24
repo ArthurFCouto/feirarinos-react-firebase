@@ -1,16 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import {
     Box, Container, CssBaseline,
-    Divider, IconButton, InputBase, LinearProgress,
-    Link as MLink, Paper,
+    Divider, IconButton, InputBase, LinearProgress, Paper,
     Stack, Typography, useMediaQuery
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { Search } from '@mui/icons-material';
+import { Clear, Search } from '@mui/icons-material';
 import logo from '../favicon.ico';
 import { ChipCategorie, CustomCard, CustomMenu } from '@/components/busca';
 import { Footer } from '@/components/ui';
@@ -35,6 +33,7 @@ export default function Busca() {
         setSelectedCategory('');
         const data = new FormData(event.currentTarget);
         const search = String(data.get('search'));
+        if (search.trim().length === 0) return;
         getmarketListByFilter(search);
         setSearchTerm(`Buscando por ${search}`);
     };
@@ -43,7 +42,7 @@ export default function Busca() {
         if (loading) return;
         setSelectedCategory((prevCategorie) => prevCategorie === item ? '' : item);
         getmarketListByFilter(selectedCategory === item ? '' : item);
-        setSearchTerm(selectedCategory === item ? '' : `Filtrando pela categoria ${item}`);
+        setSearchTerm(selectedCategory === item ? '' : `Filtrando por ${item}`);
     };
 
     const getmarketListByFilter = async (item: string) => {
@@ -97,31 +96,23 @@ export default function Busca() {
                     paddingX={1}
                     paddingY={3}
                 >
-                    <MLink
-                        component={Link}
-                        color='inherit'
-                        href='/'
-                        title='Bem vindo a FeirArinos'
-                        sx={{ textDecoration: 'none' }}
-                    >
-                        <Box alignItems='center' display='flex' flexDirection='row'>
-                            <Image
-                                alt='Logo'
-                                src={logo}
-                                height={sizeImage}
-                                width={sizeImage}
-                            />
-                            <Typography
-                                component='h1'
-                                fontWeight='bold'
-                                ml={1}
-                                variant={smDownScreen ? 'h5' : 'h4'}
-                                sx={{ textShadow: '-1px -1px 1px #909090' }}
-                            >
-                                FeirArinos
-                            </Typography>
-                        </Box>
-                    </MLink>
+                    <Box alignItems='center' display='flex' flexDirection='row'>
+                        <Image
+                            alt='Logo'
+                            src={logo}
+                            height={sizeImage}
+                            width={sizeImage}
+                        />
+                        <Typography
+                            component='h1'
+                            fontWeight='bold'
+                            ml={1}
+                            variant={smDownScreen ? 'h5' : 'h4'}
+                            sx={{ textShadow: '-1px -1px 1px #909090' }}
+                        >
+                            FeirArinos
+                        </Typography>
+                    </Box>
                     <Box
                         alignItems='center'
                         display='flex'
@@ -143,7 +134,7 @@ export default function Busca() {
                         <InputBase
                             id='search'
                             name='search'
-                            placeholder='Busque por nome ou categoria'
+                            placeholder='Busque por nome, categoria ou feirante'
                             sx={{
                                 flex: 1,
                                 marginLeft: 1
@@ -153,20 +144,33 @@ export default function Busca() {
                         <IconButton color='primary' type='submit'>
                             <Search />
                         </IconButton>
+                        {
+                            searchTerm.length > 0 && (
+                                <IconButton
+                                    color='error'
+                                    onClick={() => {
+                                        getmarketListByFilter('');
+                                        setSearchTerm('');
+                                        setSelectedCategory('');
+                                    }}
+                                >
+                                    <Clear />
+                                </IconButton>
+                            )
+                        }
                     </Box>
                 </Paper>
                 <Stack
-                    bgcolor='#FEFEFE'
-                    borderRadius={1}
                     flexDirection='row'
                     flexWrap='nowrap'
                     gap={1}
                     marginTop={2}
                     overflow='auto'
                     paddingY={1}
+                    marginRight={smDownScreen ? -2 : undefined}
                 >
                     {
-                        loading && categoryList.length === 0 ? <Typography fontWeight={500} variant='subtitle2'>Carregando categorias</Typography> :
+                        loading && categoryList.length === 0 ? <Typography variant='subtitle2'>Carregando categorias...</Typography> :
                             <>
                                 {
                                     categoryList.map((item, index) => <ChipCategorie filtercategorie={() => changeCategorie(item)} key={index} label={item} selected={selectedCategory} />)
@@ -176,16 +180,17 @@ export default function Busca() {
                 </Stack>
                 <Box display='flex' flexDirection='column' gap={2} paddingY={2}>
                     {
-                        searchTerm.length > 0 && <Typography fontWeight={500} variant='subtitle2'>{searchTerm}</Typography>
+                        searchTerm.length > 0 && <Typography fontWeight={500} variant='h6'>{searchTerm}</Typography>
                     }
+                    <Divider />
                     {
                         loading ? <LinearProgress sx={{ marginTop: 2 }} />
                             : marketList.length === 0 ?
-                                <Typography component='h5' fontWeight={500} variant='h5'>{emptyMessage}</Typography>
+                                <Typography variant='h6'>{emptyMessage}</Typography>
                                 :
                                 <>
                                     {
-                                        marketList.map((market, index) => <CustomCard key={index} market={market} details={() => alert('Em fase de desenvolvimento.')} redirectWhatsapp={() => window.open(`https://api.whatsapp.com/send?phone=55${market.phone}`)} />)
+                                        marketList.map((market, index) => <CustomCard key={index} market={market} details={() => alert('Em fase de desenvolvimento.')} redirectWhatsapp={() => window.open(`https://api.whatsapp.com/send?phone=55${market.phone}`)} smDownScreen={smDownScreen} />)
                                     }
                                 </>
                     }

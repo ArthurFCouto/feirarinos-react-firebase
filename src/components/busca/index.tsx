@@ -4,20 +4,20 @@ import { Market } from '@/config/firebase';
 import {
     Box, Button, Card, CardContent,
     CardMedia, Chip, Divider, IconButton,
-    Stack, Tooltip, Typography, useMediaQuery
+    Stack, Tooltip, Typography
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { AccountCircle, LocationOn, Loupe, WhatsApp } from '@mui/icons-material';
 import { orderArrayString } from '@/util';
 
-interface CustomCardProps {
-    market: Market;
-    details: () => void;
-    redirectWhatsapp: () => void;
-}
 
 interface CustomMenuProps {
     smDownScreen: boolean;
+}
+
+interface CustomCardProps extends CustomMenuProps {
+    market: Market;
+    details: () => void;
+    redirectWhatsapp: () => void;
 }
 
 interface CustomCardFooterProps {
@@ -97,10 +97,8 @@ const CustomCardFooter = ({ card, delivery, pix, redirectWhatsapp, sizeChip, siz
     </Box>
 )
 
-export function CustomCard({ details, market, redirectWhatsapp }: CustomCardProps) {
-    const { card, customName, delivery, pix, products } = market;
-    const theme = useTheme();
-    const smDownScreen = useMediaQuery(theme.breakpoints.down('sm'));
+export function CustomCard({ details, market, redirectWhatsapp, smDownScreen }: CustomCardProps) {
+    const { card, customName, daysWorking, delivery, pix, products } = market;
     const sizeChip = smDownScreen ? 'small' : 'medium';
     const [categories, setCategories] = useState<string[]>([]);
     const extractCategories = () => {
@@ -112,22 +110,19 @@ export function CustomCard({ details, market, redirectWhatsapp }: CustomCardProp
         const listCategories = [...new Set(list)];
         setCategories(orderArrayString(listCategories));
     }
-    useEffect(() => {
-        extractCategories();
-    }, []);
-    
+    useEffect(() => { extractCategories(); }, []);
+
     return (
         <Card
             component={Box}
             display='flex'
+            elevation={3}
             flexDirection={smDownScreen ? 'column-reverse' : 'row'}
-            //height={smDownScreen ? 'auto' : 220}
-            variant='outlined'
         >
             <Box display='flex' flexDirection='column' width='100%'>
                 <CardContent component={Box} flex={1}>
-                    <Typography component='h5' fontWeight={500} variant='h5'>
-                        {customName}
+                    <Typography fontWeight={500} variant='h5'>
+                        {customName.toUpperCase()}
                     </Typography>
                     <Stack
                         alignItems='center'
@@ -139,7 +134,7 @@ export function CustomCard({ details, market, redirectWhatsapp }: CustomCardProp
                         rowGap={1}
                     >
                         {
-                            categories.slice(0, 3).map((item, index) => <Chip clickable key={index} label={item} size={sizeChip} />)
+                            categories.slice(0, 3).map((item, index) => <Chip clickable color='info' key={index} label={item} size={sizeChip} />)
                         }
                         <Tooltip title='Ver mais informações'>
                             <Button
@@ -152,6 +147,13 @@ export function CustomCard({ details, market, redirectWhatsapp }: CustomCardProp
                             </Button>
                         </Tooltip>
                     </Stack>
+                    {
+                        !smDownScreen && (
+                            <Typography fontWeight={500} variant='caption'>
+                                {`Atende ${daysWorking.replaceAll(',', ', ')}`}
+                            </Typography>
+                        )
+                    }
                 </CardContent>
                 <CustomCardFooter
                     card={card}
@@ -201,7 +203,7 @@ export function CustomMenu({ smDownScreen }: CustomMenuProps) {
                 startIcon={<AccountCircle />}
                 variant='contained'
             >
-                Acessar Conta
+                Area Feirante
             </Button>
         </Box>
     )
@@ -211,7 +213,8 @@ export function ChipCategorie({ label, filtercategorie, selected }: ChipCategori
     return (
         <Chip
             clickable
-            size='small'
+            color={selected === label ? 'info' : 'default'}
+            size='medium'
             label={label}
             variant={selected === label ? 'filled' : 'outlined'}
             onClick={filtercategorie}

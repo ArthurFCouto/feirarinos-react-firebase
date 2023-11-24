@@ -6,7 +6,7 @@ import { Box, Button, CircularProgress, Grid, Typography } from '@mui/material';
 
 export default function Home() {
   const router = useRouter();
-  useEffect(() => router.push('/busca'), []);
+  useEffect(() => { router.push('/busca') }, []);
 
   return (
     <Box
@@ -49,7 +49,7 @@ export default function Home() {
         >
           <Button
             color='primary'
-            endIcon={<CircularProgress color='inherit' size='0.9375rem'/>}
+            endIcon={<CircularProgress color='inherit' size='0.9375rem' />}
             href='/busca'
             variant='contained'
             size='large'
