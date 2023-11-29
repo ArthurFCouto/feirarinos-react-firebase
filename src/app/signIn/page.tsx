@@ -14,12 +14,19 @@ import { Footer } from '@/components/ui';
 import { CustomObject, FormUser, FormMarket, FormProduct } from '@/components/signIn';
 import firebase, { CustomUser, Market } from '@/config/firebase';
 
+interface PropsAlert {
+  color: 'success' | 'info' | 'warning' | 'error',
+  open: boolean,
+  message: string
+}
+
 export default function SignIn() {
   const router = useRouter();
   const [user, setUser] = useState<CustomUser | {}>({});
   const [loading, setLoading] = useState(true);
   const [activeStep, setActiveStep] = useState(0);
-  const [alert, setAlert] = useState({
+  const [alert, setAlert] = useState<PropsAlert>({
+    color: 'info',
     open: false,
     message: ''
   });
@@ -36,6 +43,7 @@ export default function SignIn() {
     const data = new FormData(event.currentTarget);
     if (String(data.get('password')).length < 6) {
       setAlert({
+        color: 'error',
         open: true,
         message: 'A senha deve ter no mínimo 6 dígitos.'
       })
@@ -43,6 +51,7 @@ export default function SignIn() {
     }
     if (data.get('password') !== data.get('passwordConfirm')) {
       setAlert({
+        color: 'warning',
         open: true,
         message: 'As senhas digitadas não conferem'
       })
@@ -64,6 +73,7 @@ export default function SignIn() {
     const data = new FormData(event.currentTarget);
     if (String(data.get('daysWorking')).length === 0) {
       setAlert({
+        color: 'warning',
         open: true,
         message: 'Favor informar os dias em que você realiza vendas.'
       });
@@ -92,52 +102,72 @@ export default function SignIn() {
       ...prevUser,
       products: options
     }));
+    setLoading(true);
+    setAlert({
+      color: 'info',
+      open: true,
+      message: 'Enviando dados, aguarde...'
+    })
+    setTimeout(() => { handleRegister() }, 3000);
     //nextStep();
-    handleRegister();
   };
   const handleRegister = () => {
     if (loading)
       return;
     setLoading(true);
-    const { card, customName, daysWorking, delivery, email, location, name, password, phone, pix, products } = user as CustomUser;
-    const auth = getAuth(firebase);
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        setAlert({
-          open: true,
-          message: 'Usuário criado! Cadastrando banca...'
-        })
-        const { user } = userCredential;
-        createMarket(user.uid)
-      })
-      .catch((error) => {
-        const { code, message } = error;
-        setAlert({
-          open: true,
-          message: message
-        });
-        setLoading(false);
-      });
-    const createMarket = async (uid: string) => {
-      const db = getFirestore(firebase);
-      await addDoc(collection(db, 'banca'), { card, customName, daysWorking, delivery, location, phone, pix, products, userID: uid })
-        .then(() => {
+    try {
+      const { card, customName, daysWorking, delivery, email, location, name, password, phone, pix, products } = user as CustomUser;
+      const auth = getAuth(firebase);
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
           setAlert({
+            color: 'info',
             open: true,
-            message: 'Cadastro finalizado! Redirecionando...'
-          });
-          router.push('/busca');
+            message: 'Usuário criado! Cadastrando banca...'
+          })
+          const { user } = userCredential;
+          createMarket(user.uid)
         })
-        .catch((error: any) => {
+        .catch((error) => {
+          const { code, message } = error;
           setAlert({
+            color: 'error',
             open: true,
-            message: error.message
+            message: message
           });
-        })
-        .finally(() => {
           setLoading(false);
-        })
-    }
+        });
+      const createMarket = async (uid: string) => {
+        const db = getFirestore(firebase);
+        await addDoc(collection(db, 'banca'), { card, customName, daysWorking, delivery, location, phone, pix, products, userID: uid })
+          .then(() => {
+            setAlert({
+              color: 'success',
+              open: true,
+              message: 'Cadastro finalizado! Redirecionando...'
+            });
+            router.push('/busca');
+          })
+          .catch((error: any) => {
+            setAlert({
+              color: 'error',
+              open: true,
+              message: error.message
+            });
+          })
+          .finally(() => {
+            setLoading(false);
+          })
+      }
+    } catch (error: any) {
+      const { code, message } = error;
+      setAlert({
+        color: 'error',
+        open: true,
+        message: message
+      });
+      setLoading(false);
+    };
   }
   const [categoryProducts, setCategoryProducts] = useState<Array<CustomObject>>([]);
   const getCategoryProducts = async () => {
@@ -207,7 +237,7 @@ export default function SignIn() {
               <Close fontSize='inherit' />
             </IconButton>
           }
-          severity='error'
+          severity={alert.color}
           sx={{ marginBottom: 2 }}
         >
           {alert.message}
