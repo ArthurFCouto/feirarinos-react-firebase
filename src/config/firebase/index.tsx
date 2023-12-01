@@ -26,7 +26,13 @@ export const messageError = (message: string)=> {
   return response;
 }
 
-export type Market = {
+export interface CustomUser{
+  name: string;
+  email: string;
+  password: string;
+};
+
+export interface Market extends CustomUser {
   card: boolean;
   customName: string;
   daysWorking: string;
@@ -34,14 +40,8 @@ export type Market = {
   location: string;
   phone: number;
   pix: boolean;
-  products: string[];
+  products: Array<string>;
   userID: string;
 }
-
-export interface CustomUser extends Market {
-  name: string;
-  email: string;
-  password: string;
-};
 
 export default initializeApp(firebaseConfig);

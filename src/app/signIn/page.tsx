@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation';
 import { addDoc, collection, getDocs, getFirestore } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import {
-  Alert, Avatar, Box, Button, Container,
+  Alert, Avatar, Box, Container,
   CssBaseline, IconButton, Link as MLink, Typography,
-  Paper, Step, Stepper, Snackbar, LinearProgress, Stack
+  Step, Stepper, Snackbar, LinearProgress
 } from '@mui/material';
 import { AccountBox, Close } from '@mui/icons-material';
 import { Footer } from '@/components/ui';
-import { CustomObject, FormUser, FormMarket, FormProduct } from '@/components/signIn';
-import firebase, { CustomUser, Market } from '@/config/firebase';
+import { CustomObject, FormUser, FormMarket, FormProduct, CustomUserForm, CustomMarketForm } from '@/components/signIn';
+import firebase, { Market, CustomUser, messageError } from '@/config/firebase';
 
 interface PropsAlert {
   color: 'success' | 'info' | 'warning' | 'error',
@@ -22,9 +22,10 @@ interface PropsAlert {
 
 export default function SignIn() {
   const router = useRouter();
-  const [user, setUser] = useState<CustomUser | {}>({});
   const [loading, setLoading] = useState(true);
-  const [activeStep, setActiveStep] = useState(0);
+  const [user, setUser] = useState<Market | {}>({});
+  const [activeStep, setActiveStep] = useState(-1);
+  const [categoryProducts, setCategoryProducts] = useState<Array<CustomObject>>([]);
   const [alert, setAlert] = useState<PropsAlert>({
     color: 'info',
     open: false,
@@ -38,10 +39,8 @@ export default function SignIn() {
   };
   const nextStep = () => { setActiveStep((prevActiveStep) => prevActiveStep + 1) };
   const previousStep = () => { setActiveStep((prevActiveStep) => prevActiveStep - 1) };
-  const handleFormUser = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    if (String(data.get('password')).length < 6) {
+  const handleFormUser = (customUserForm: CustomUserForm) => {
+    if (customUserForm.password.length < 6) {
       setAlert({
         color: 'error',
         open: true,
@@ -49,7 +48,7 @@ export default function SignIn() {
       })
       return;
     }
-    if (data.get('password') !== data.get('passwordConfirm')) {
+    if (customUserForm.password !== customUserForm.passwordConfirm) {
       setAlert({
         color: 'warning',
         open: true,
@@ -59,19 +58,13 @@ export default function SignIn() {
     }
     setUser((prevUser) => ({
       ...prevUser,
-      name: data.get('name'),
-      email: data.get('email'),
-      phone: parseInt(String(data.get('phone')).replace(/[^0-9]/g, '')),
-      location: data.get('location'),
-      password: data.get('password'),
+      ...customUserForm,
     }));
     setAlert((prevAlert) => ({ ...prevAlert, open: false }));
     nextStep();
   };
-  const handleSecondStep = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    if (String(data.get('daysWorking')).length === 0) {
+  const handleFormMarket = (customMarketForm: CustomMarketForm) => {
+    if (customMarketForm.daysWorking.length === 0) {
       setAlert({
         color: 'warning',
         open: true,
@@ -81,99 +74,76 @@ export default function SignIn() {
     }
     setUser((prevUser) => ({
       ...prevUser,
-      customName: data.get('customName'),
-      delivery: data.get('delivery') == 'on',
-      money: data.get('money') == 'on',
-      pix: data.get('pix') == 'on',
-      card: data.get('card') == 'on',
-      daysWorking: data.get('daysWorking'),
+      ...customMarketForm
     }));
+    setAlert((prevAlert) => ({ ...prevAlert, open: false }));
     nextStep();
   };
-  const handleThirdStep = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const options: string[] = [];
-    for (const pair of data.entries()) {
-      if (pair[1] === 'on')
-        options.push(pair[0]);
+  const handleFormProducts = (customProductsForm: Array<string>) => {
+    if (customProductsForm.length === 0) {
+      setAlert({
+        color: 'warning',
+        open: true,
+        message: 'Favor selecionar ao menos um produto para venda.'
+      });
+      return;
     }
-    setUser((prevUser) => ({
-      ...prevUser,
-      products: options
-    }));
-    setLoading(true);
     setAlert({
       color: 'info',
       open: true,
       message: 'Enviando dados, aguarde...'
     })
-    setTimeout(() => { handleRegister() }, 3000);
-    //nextStep();
-  };
-  const handleRegister = () => {
+    registerUser(customProductsForm);
+  }
+  const registerUser = async (products: Array<string>) => {
     if (loading)
       return;
     setLoading(true);
-    try {
-      const { card, customName, daysWorking, delivery, email, location, name, password, phone, pix, products } = user as CustomUser;
-      const auth = getAuth(firebase);
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          setAlert({
-            color: 'info',
-            open: true,
-            message: 'Usuário criado! Cadastrando banca...'
-          })
-          const { user } = userCredential;
-          createMarket(user.uid)
+    const { email, password } = user as CustomUser;
+    const auth = getAuth(firebase);
+    await createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        setAlert({
+          color: 'info',
+          open: true,
+          message: 'Usuário criado! Cadastrando banca...'
         })
-        .catch((error) => {
-          const { code, message } = error;
-          setAlert({
-            color: 'error',
-            open: true,
-            message: message
-          });
-          setLoading(false);
-        });
-      const createMarket = async (uid: string) => {
-        const db = getFirestore(firebase);
-        await addDoc(collection(db, 'banca'), { card, customName, daysWorking, delivery, location, phone, pix, products, userID: uid })
-          .then(() => {
-            setAlert({
-              color: 'success',
-              open: true,
-              message: 'Cadastro finalizado! Redirecionando...'
-            });
-            router.push('/busca');
-          })
-          .catch((error: any) => {
-            setAlert({
-              color: 'error',
-              open: true,
-              message: error.message
-            });
-          })
-          .finally(() => {
-            setLoading(false);
-          })
-      }
-    } catch (error: any) {
-      const { code, message } = error;
-      setAlert({
-        color: 'error',
-        open: true,
-        message: message
+        const { user } = userCredential;
+        registerMarket(user.uid, products)
+      })
+      .catch((error) => {
+        handleError(error);
       });
-      setLoading(false);
-    };
   }
-  const [categoryProducts, setCategoryProducts] = useState<Array<CustomObject>>([]);
+  const registerMarket = async (userID: string, products: Array<string>) => {
+    const { card, customName, daysWorking, delivery, location, name, phone, pix } = user as Market;
+    const db = getFirestore(firebase);
+    await addDoc(collection(db, 'banca'), { card, customName, daysWorking, delivery, location, phone, pix, products, userID })
+      .then(() => {
+        setAlert({
+          color: 'success',
+          open: true,
+          message: 'Cadastro finalizado! Redirecionando...'
+        });
+        router.push('/busca');
+      })
+      .catch((error: any) => {
+        handleError(error);
+      });
+  }
+  const handleError = (error: any) => {
+    const { code, message } = error;
+    setAlert({
+      color: 'error',
+      open: true,
+      message: messageError(code)
+    });
+    setLoading(false);
+  }
   const getCategoryProducts = async () => {
     setLoading(true);
-    const categorias: string[] = [];
-    const produtos: string[] = [];
+    const categorias: Array<string> = [];
+    const produtos: Array<string> = [];
     const db = getFirestore(firebase);
     const querySnapshot = await getDocs(collection(db, 'produtos'));
     querySnapshot.forEach((doc) => {
@@ -181,6 +151,15 @@ export default function SignIn() {
       categorias.push(doc.data().name.slice(0, indexOf));
       produtos.push(doc.data().name);
     });
+    if (categorias.length === 0) {
+      setAlert({
+        color: 'error',
+        open: true,
+        message: 'Houve um erro ao conectar com o servidor, tente mais tarde.'
+      });
+      setLoading(false);
+      return;
+    }
     const listCategoryProducts: Array<CustomObject> = [...new Set(categorias)].map((categoria) => {
       return {
         categoria,
@@ -199,22 +178,8 @@ export default function SignIn() {
       })
     })
     setCategoryProducts(listCategoryProducts);
+    setActiveStep(0);
     setLoading(false);
-    /*
-    Abaixo o código para montar o objeto que contem a lista de categoria e produtos
-    setloading(true);
-    const data: any = new Object();
-    const db = getFirestore(firebase);
-    const querySnapshot = await getDocs(collection(db, 'produtos'));
-    querySnapshot.forEach((doc) => {
-      const indexOf = doc.data().name.indexOf('-');
-      if (!data[doc.data().name.slice(0, indexOf)])
-        data[doc.data().name.slice(0, indexOf)] = [];
-      data[doc.data().name.slice(0, indexOf)].push(doc.data().name.slice(indexOf + 1));
-    });
-    console.log('Data', data);
-    setloading(false)
-    */
   }
   useEffect(() => { getCategoryProducts() }, [])
 
@@ -274,30 +239,15 @@ export default function SignIn() {
           <Box marginTop={3} width='100%'>
             <Stepper activeStep={activeStep} orientation='vertical'>
               <Step>
-                <FormUser onSubmit={handleFormUser} />
+                <FormUser onSubmitUser={handleFormUser} />
               </Step>
               <Step>
-                <FormMarket onSubmit={handleSecondStep} previousStep={previousStep} />
+                <FormMarket onSubmitMarket={handleFormMarket} previousStep={previousStep} />
               </Step>
               <Step>
-                <FormProduct categoryProducts={categoryProducts} nextStep={nextStep} onSubmit={handleThirdStep} previousStep={previousStep} />
+                <FormProduct categoryProducts={categoryProducts} onSubmitProducts={handleFormProducts} previousStep={previousStep} />
               </Step>
             </Stepper>
-            {
-              activeStep === 3 && (
-                <Paper square elevation={0} sx={{ padding: 3 }}>
-                  <Typography>Todas as informações foram preenchidas, clique abaixo para finalizar.</Typography>
-                  <Stack flexDirection='row' gap={1} justifyContent='flex-end' padding={1}>
-                    <Button onClick={previousStep}>
-                      Voltar
-                    </Button>
-                    <Button onClick={handleRegister} variant='contained'>
-                      Cadastrar
-                    </Button>
-                  </Stack>
-                </Paper>
-              )
-            }
             {
               loading && <LinearProgress />
             }
