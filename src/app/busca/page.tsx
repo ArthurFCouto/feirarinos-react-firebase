@@ -10,12 +10,17 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { Clear, Search } from '@mui/icons-material';
 import logo from '../favicon.ico';
-import { ChipCategorie, CustomCard, CustomMenu } from '@/components/busca';
+import { ChipCategorie, CustomCard, CustomMenu, Details } from '@/components/busca';
 import { Footer } from '@/components/ui';
 import firebase, { Market } from '@/config/firebase';
 import { orderArrayString } from '@/util';
 
 const emptyMessage = 'Não encontramos resultados para exibir.';
+
+interface DetailsProps {
+    market?: Market;
+    open: boolean;
+}
 
 export default function Busca() {
     const theme = useTheme();
@@ -25,8 +30,10 @@ export default function Busca() {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [marketList, setMarketList] = useState<Array<Market>>([]);
-    const [categoryList, setCategoryList] = useState<string[]>([]);
-
+    const [categoryList, setCategoryList] = useState<Array<string>>([]);
+    const [detailsState, setDetailsState] = useState<DetailsProps>({
+        open: false
+    });
     const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (loading) return;
@@ -37,14 +44,19 @@ export default function Busca() {
         getmarketListByFilter(search);
         setSearchTerm(`Buscando por ${search}`);
     };
-
+    const handleDetails = (market: Market) => {
+        setDetailsState({
+            market: market,
+            open: true
+        })
+    }
+    const handleCloseDetails = () => setDetailsState((prevDetailsState) => ({ ...prevDetailsState, open: false }));
     const changeCategorie = (item: string) => {
         if (loading) return;
         setSelectedCategory((prevCategorie) => prevCategorie === item ? '' : item);
         getmarketListByFilter(selectedCategory === item ? '' : item);
         setSearchTerm(selectedCategory === item ? '' : `Filtrando por ${item}`);
     };
-
     const getmarketListByFilter = async (item: string) => {
         try {
             setLoading(true);
@@ -64,7 +76,6 @@ export default function Busca() {
             setLoading(false);
         }
     }
-
     const getCategoryProducts = async () => {
         try {
             const db = getFirestore(firebase);
@@ -87,6 +98,7 @@ export default function Busca() {
 
     return (
         <Box display='flex' flexDirection='column' height='100%'>
+            <Details market={detailsState?.market} onClose={handleCloseDetails} open={detailsState.open} redirectWhatsapp={() => window.open(`https://api.whatsapp.com/send?phone=55${detailsState.market?.phone}`)} />
             <Container maxWidth='xl' sx={{ flex: 1 }}>
                 <CssBaseline />
                 <Stack
@@ -190,7 +202,7 @@ export default function Busca() {
                                 :
                                 <>
                                     {
-                                        marketList.map((market, index) => <CustomCard key={index} market={market} details={() => alert('Em fase de desenvolvimento.')} redirectWhatsapp={() => window.open(`https://api.whatsapp.com/send?phone=55${market.phone}`)} smDownScreen={smDownScreen} />)
+                                        marketList.map((market, index) => <CustomCard key={index} market={market} details={() => handleDetails(market)} redirectWhatsapp={() => window.open(`https://api.whatsapp.com/send?phone=55${market.phone}`)} smDownScreen={smDownScreen} />)
                                     }
                                 </>
                     }

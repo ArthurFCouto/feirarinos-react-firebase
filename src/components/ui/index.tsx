@@ -10,32 +10,6 @@ interface AlertDialogProps {
     onClose: () => void;
 }
 
-export const AlertDialog: React.FC<AlertDialogProps> = ({ isOpen, onClose }) => {
-    return (
-        <Dialog
-        aria-describedby='alert-dialog-description'
-        aria-labelledby='alert-dialog-title'
-            open={isOpen}
-            onClose={onClose}
-        >
-            <DialogTitle id='alert-dialog-title'>
-                Plataforma em Fase de Desenvolvimento
-            </DialogTitle>
-            <DialogContent>
-                <DialogContentText id='alert-dialog-description'>
-                    Ainda estamos em desenvolvimento, em breve você poderá utilizar todas as funções.
-                </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-                <Button disabled onClick={onClose} >Cancelar</Button>
-                <Button autoFocus onClick={onClose} >
-                    Ok
-                </Button>
-            </DialogActions>
-        </Dialog>
-    );
-}
-
 export const Footer = () => (
     <Box
         bgcolor='#F3F2F2'

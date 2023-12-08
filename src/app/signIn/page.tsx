@@ -9,13 +9,12 @@ import {
   CssBaseline, IconButton, Link as MLink, Typography,
   Step, Stepper, Snackbar, LinearProgress
 } from '@mui/material';
-import { AccountBox, Close } from '@mui/icons-material';
+import { AccountBox, CloseSharp } from '@mui/icons-material';
 import { Footer } from '@/components/ui';
 import { CustomObject, FormUser, FormMarket, FormProduct, CustomUserForm, CustomMarketForm } from '@/components/signIn';
 import firebase, { Market, CustomUser, messageError } from '@/config/firebase';
 
 interface PropsAlert {
-  color: 'success' | 'info' | 'warning' | 'error',
   open: boolean,
   message: string
 }
@@ -27,7 +26,6 @@ export default function SignIn() {
   const [activeStep, setActiveStep] = useState(-1);
   const [categoryProducts, setCategoryProducts] = useState<Array<CustomObject>>([]);
   const [alert, setAlert] = useState<PropsAlert>({
-    color: 'info',
     open: false,
     message: ''
   });
@@ -42,7 +40,6 @@ export default function SignIn() {
   const handleFormUser = (customUserForm: CustomUserForm) => {
     if (customUserForm.password.length < 6) {
       setAlert({
-        color: 'error',
         open: true,
         message: 'A senha deve ter no mínimo 6 dígitos.'
       })
@@ -50,7 +47,6 @@ export default function SignIn() {
     }
     if (customUserForm.password !== customUserForm.passwordConfirm) {
       setAlert({
-        color: 'warning',
         open: true,
         message: 'As senhas digitadas não conferem'
       })
@@ -66,7 +62,6 @@ export default function SignIn() {
   const handleFormMarket = (customMarketForm: CustomMarketForm) => {
     if (customMarketForm.daysWorking.length === 0) {
       setAlert({
-        color: 'warning',
         open: true,
         message: 'Favor informar os dias em que você realiza vendas.'
       });
@@ -82,29 +77,26 @@ export default function SignIn() {
   const handleFormProducts = (customProductsForm: Array<string>) => {
     if (customProductsForm.length === 0) {
       setAlert({
-        color: 'warning',
         open: true,
         message: 'Favor selecionar ao menos um produto para venda.'
       });
       return;
     }
-    setAlert({
-      color: 'info',
-      open: true,
-      message: 'Enviando dados, aguarde...'
-    })
     registerUser(customProductsForm);
   }
   const registerUser = async (products: Array<string>) => {
     if (loading)
       return;
     setLoading(true);
+    setAlert({
+      open: true,
+      message: 'Enviando dados, aguarde...'
+    })
     const { email, password } = user as CustomUser;
     const auth = getAuth(firebase);
     await createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         setAlert({
-          color: 'info',
           open: true,
           message: 'Usuário criado! Cadastrando banca...'
         })
@@ -121,7 +113,6 @@ export default function SignIn() {
     await addDoc(collection(db, 'banca'), { card, customName, daysWorking, delivery, location, phone, pix, products, userID })
       .then(() => {
         setAlert({
-          color: 'success',
           open: true,
           message: 'Cadastro finalizado! Redirecionando...'
         });
@@ -134,7 +125,6 @@ export default function SignIn() {
   const handleError = (error: any) => {
     const { code, message } = error;
     setAlert({
-      color: 'error',
       open: true,
       message: messageError(code)
     });
@@ -153,7 +143,6 @@ export default function SignIn() {
     });
     if (categorias.length === 0) {
       setAlert({
-        color: 'error',
         open: true,
         message: 'Houve um erro ao conectar com o servidor, tente mais tarde.'
       });
@@ -186,28 +175,22 @@ export default function SignIn() {
   return (
     <Box display='flex' flexDirection='column' height='100%'>
       <Snackbar
+        action={
+          <IconButton
+            size='medium'
+            aria-label='close'
+            color='inherit'
+            onClick={closeAlert}
+          >
+            <CloseSharp fontSize='medium' />
+          </IconButton>
+        }
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         autoHideDuration={6000}
+        message={alert.message}
         onClose={closeAlert}
         open={alert.open}
-      >
-        <Alert
-          action={
-            <IconButton
-              aria-label='close'
-              color='inherit'
-              onClick={closeAlert}
-              size='small'
-            >
-              <Close fontSize='inherit' />
-            </IconButton>
-          }
-          severity={alert.color}
-          sx={{ marginBottom: 2 }}
-        >
-          {alert.message}
-        </Alert>
-      </Snackbar>
+      />
       <Container component='main' maxWidth='sm'>
         <CssBaseline />
         <Box
