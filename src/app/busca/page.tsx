@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import {
     Box, Container, CssBaseline,
-    Divider, IconButton, InputBase, Paper,
+    Divider, IconButton, InputBase, Link as MLink, Paper,
     Stack, Typography, useMediaQuery
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -13,14 +14,16 @@ import logo from '../favicon.ico';
 import { ChipCategorie, CustomCard, CustomMenu, Details } from '@/components/busca';
 import { Footer } from '@/components/ui';
 import firebase, { Market } from '@/config/firebase';
-import { OrderArrayString } from '@/util';
+import { ExtractCategories, OrderArrayString } from '@/util';
 import { Player } from '@lottiefiles/react-lottie-player';
 import search from '../../util/lottiefiles/search.json';
 import empty from '../../util/lottiefiles/empty.json';
+import { CustomObject } from '@/components/signIn';
 
 const emptyMessage = 'Não encontramos resultados para exibir.';
 
 interface DetailsProps {
+    customProducts?: Array<CustomObject>;
     market?: Market;
     open: boolean;
 }
@@ -49,10 +52,28 @@ export default function Busca() {
         setSearchTerm(`Buscando por ${search}`);
     };
     const handleDetails = (market: Market) => {
+        const listCategoryProducts: Array<CustomObject> = [...new Set(ExtractCategories(market.products))].map((categoria) => {
+            return {
+                categoria,
+                produtos: []
+            }
+        });
+        market.products.forEach((produto) => {
+            const indexOf = produto.indexOf('-');
+            const prefix = produto.slice(0, indexOf);
+            const suffix = produto.slice(indexOf + 1);
+            listCategoryProducts.forEach((item) => {
+                if (item.categoria === prefix) {
+                    item.produtos.push(suffix);
+                    return;
+                }
+            })
+        })
         setDetailsState({
+            customProducts: listCategoryProducts,
             market: market,
             open: true
-        })
+        });
     }
     const handleCloseDetails = () => setDetailsState((prevDetailsState) => ({ ...prevDetailsState, open: false }));
     const changeCategorie = (item: string) => {
@@ -102,7 +123,13 @@ export default function Busca() {
 
     return (
         <Box display='flex' flexDirection='column' height='100%'>
-            <Details market={detailsState?.market} onClose={handleCloseDetails} open={detailsState.open} redirectWhatsapp={() => window.open(`https://api.whatsapp.com/send?phone=55${detailsState.market?.phone}`)} />
+            <Details
+                customProducts={detailsState?.customProducts}
+                market={detailsState?.market}
+                onClose={handleCloseDetails}
+                open={detailsState.open}
+                redirectWhatsapp={() => window.open(`https://api.whatsapp.com/send?phone=55${detailsState.market?.phone}`)}
+            />
             <Container maxWidth='xl' sx={{ flex: 1 }}>
                 <CssBaseline />
                 <Stack
@@ -113,21 +140,30 @@ export default function Busca() {
                     paddingY={3}
                 >
                     <Box alignItems='center' display='flex' flexDirection='row'>
+
                         <Image
                             alt='Logo'
                             src={logo}
                             height={sizeImage}
                             width={sizeImage}
                         />
-                        <Typography
-                            component='h1'
-                            fontWeight='bold'
-                            ml={1}
-                            variant={smDownScreen ? 'h5' : 'h4'}
-                            sx={{ textShadow: '-1px -1px 1px #909090' }}
+                        <MLink
+                            component={Link}
+                            color='inherit'
+                            href='/'
+                            title='Ir para página inicial'
+                            sx={{ textDecoration: 'none' }}
                         >
-                            FeirArinos
-                        </Typography>
+                            <Typography
+                                component='h1'
+                                fontWeight='bold'
+                                ml={1}
+                                variant={smDownScreen ? 'h5' : 'h4'}
+                                sx={{ textShadow: '-1px -1px 1px #909090' }}
+                            >
+                                FeirArinos
+                            </Typography>
+                        </MLink>
                     </Box>
                     <Box
                         alignItems='center'
@@ -220,7 +256,7 @@ export default function Busca() {
                                 :
                                 <>
                                     {
-                                        marketList.map((market, index) => <CustomCard key={index} infoMarket={market} handleDetails={() => handleDetails(market)} /*redirectWhatsapp={() => window.open(`https://api.whatsapp.com/send?phone=55${market.phone}`)}*/ smDownScreen={smDownScreen} />)
+                                        marketList.map((market, index) => <CustomCard key={index} infoMarket={market} handleDetails={() => handleDetails(market)} smDownScreen={smDownScreen} />)
                                     }
                                 </>
                     }

@@ -2,13 +2,16 @@
 import { useEffect, useState } from 'react';
 import { Market } from '@/config/firebase';
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
     Box, Button, Card, CardContent,
     CardMedia, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, IconButton,
     Stack, Tooltip, Typography
 } from '@mui/material';
-import { AccountCircle, LocationOn, Loupe, Visibility, WhatsApp } from '@mui/icons-material';
-import { ExtractCategories, OrderArrayString } from '@/util';
-
+import { AccountCircle, ExpandMore, LocationOn, Loupe, Visibility, WhatsApp } from '@mui/icons-material';
+import { ExtractCategories, PhoneMask } from '@/util';
+import { CustomObject } from '../signIn';
 
 interface CustomMenuProps {
     smDownScreen: boolean;
@@ -32,6 +35,7 @@ interface ChipCategorieProps {
 
 interface DetailsProps {
     market?: Market;
+    customProducts?: Array<CustomObject>;
     onClose: () => void;
     open: boolean;
     redirectWhatsapp: () => void;
@@ -217,18 +221,61 @@ export function CustomCard({ infoMarket, handleDetails, smDownScreen }: CustomCa
     )
 }
 
-export function Details({ market, onClose, open, redirectWhatsapp }: DetailsProps) {
+export function Details({ market, customProducts, onClose, open, redirectWhatsapp }: DetailsProps) {
+    const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
+    const handleChangeAccordion =
+        (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+            setExpandedAccordion(isExpanded ? panel : false);
+        };
     return (
         <Dialog
+            fullWidth={true}
+            maxWidth='lg'
             open={open}
             onClose={onClose}
+            scroll='body'
         >
             <DialogTitle>
                 {market?.customName}
+                <Typography variant='subtitle2'>
+                    {PhoneMask(String(market?.phone))}
+                </Typography>
             </DialogTitle>
             <DialogContent>
-                <DialogContentText>
-                    Ainda estamos em desenvolvimento, em breve você poderá utilizar todas as funções.
+                <Typography >Atendemos você {market?.daysWorking.split(',').map((label, index) => <Chip color='primary' key={index} variant='filled' label={label} size='small'/>)}</Typography>
+                {market?.delivery ?? (<Typography>E também fazemos entrega</Typography>)}
+                <Divider variant='fullWidth' sx={{ marginY: 2 }} />
+                <Typography gutterBottom>Confira abaixo todos os nossos produtos</Typography>
+                {
+                    customProducts?.map((item, index) =>
+                        <Accordion
+                            key={index}
+                            expanded={expandedAccordion === item.categoria}
+                            onChange={handleChangeAccordion(item.categoria)}
+                            sx={{ marginTop: index === 0 ? 2 : 0 }}
+                        >
+                            <AccordionSummary
+                                expandIcon={<ExpandMore />}
+                                aria-controls='panel1bh-content'
+                                id='panel1bh-header'
+                            >
+                                <Typography sx={{ width: '33%', flexShrink: 0 }}>{item.categoria}</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <Stack flexDirection='row' gap={1} flexWrap='wrap'>
+                                    {
+                                        item.produtos.map(
+                                            (label, index) =>
+                                                <Chip color='primary' key={index} variant='filled' label={label} />
+                                        )
+                                    }
+                                </Stack>
+                            </AccordionDetails>
+                        </Accordion>
+                    )
+                }
+                <DialogContentText sx={{ marginTop: 2 }}>
+                    Clique abaixo e fale direto com o vendedor
                 </DialogContentText>
             </DialogContent>
             <DialogActions>

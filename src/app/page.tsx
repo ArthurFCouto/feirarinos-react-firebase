@@ -133,13 +133,12 @@ export default function Home() {
           >
             <Player
               autoplay
-              keepLastFrame
               loop
               src={connection}
               style={{ height: 200, width: 200 }}
             />
-            <Typography variant={'h5'} >
-              Buscando <strong>aproximar</strong> os feirantes da população, esta plataforma foi desenvolvida para facilitar a <strong>divulgação dos feirantes e seus produtos</strong> para o cliente que procura por um produto artesanal.
+            <Typography variant={'h5'}>
+              Buscando <strong>facilitar o contato</strong> entre os feirantes e a população, esta plataforma foi desenvolvida para ajudar na <strong>divulgação dos feirantes e seus produtos</strong>, e aumentar sua chance de novos negócios.
             </Typography>
           </Stack>
         </Grid>
@@ -154,7 +153,7 @@ export default function Home() {
                 Um Projeto Estudantil
               </Typography>
               <Typography variant='h5'>
-                Esta plataforma faz parte de um projeto desenvolvido pelos alunos da turma de BSI 6º periodo do IFNMG, em parceria com a associação de feirantes do municipio de Arinos/MG
+                Esta plataforma é um projeto desenvolvido pelos alunos da turma de BSI 6º periodo do IFNMG, em parceria com a associação de feirantes do municipio de Arinos/MG.
               </Typography>
             </Grid>
             <Grid
@@ -173,22 +172,21 @@ export default function Home() {
             </Grid>
           </Grid>
         </Grid>
-        <Divider orientation='horizontal' sx={{ marginY: 5, width: '100%' }} />
+        <Divider sx={{ marginY: 5, width: '100%' }}/>
         <Grid item xs={12}>
           <Typography fontWeight='bold' gutterBottom textAlign='center' variant='h5'>
-            Busque por produtos, categoria de produtos ou feirantes!
+            Busque por produtos, suas categorias ou feirantes!
           </Typography>
           <Typography gutterBottom textAlign='center' variant='h5'>
-            Encontre o que precisa e entre em contato direto pelo <>Whatsapp.</>
+            Encontre o que precisa e negocie diretamente pelo <Typography color={(theme)=> theme.palette.success.main} variant='h5' fontWeight='bold'>Whatsapp.</Typography>
           </Typography>
         </Grid>
-        <Divider orientation='horizontal' variant='fullWidth' />
-        <Grid item xs={12}>
+        <Grid item padding={3} xs={12}>
           <Paper
             component={Box}
             marginX='auto'
             marginY={3}
-            width='50%'
+            width={smDownScreen ? '100%' : '50%'}
           >
             <Box
               alignItems='center'
