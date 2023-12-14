@@ -6,8 +6,8 @@ import {
     CardMedia, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, IconButton,
     Stack, Tooltip, Typography
 } from '@mui/material';
-import { AccountCircle, LocationOn, Loupe, WhatsApp } from '@mui/icons-material';
-import { orderArrayString } from '@/util';
+import { AccountCircle, LocationOn, Loupe, Visibility, WhatsApp } from '@mui/icons-material';
+import { ExtractCategories, OrderArrayString } from '@/util';
 
 
 interface CustomMenuProps {
@@ -15,17 +15,11 @@ interface CustomMenuProps {
 }
 
 interface CustomCardProps extends CustomMenuProps {
-    market: Market;
-    details: () => void;
-    redirectWhatsapp: () => void;
+    infoMarket: Market;
+    handleDetails: () => void;
 }
 
-interface CustomCardFooterProps {
-    card: boolean;
-    delivery: boolean;
-    pix: boolean;
-    redirectWhatsapp: () => void;
-    smDownScreen: boolean;
+interface CustomCardFooterProps extends CustomCardProps {
     sizeChip: 'small' | 'medium';
     sizeImage: number;
 }
@@ -43,66 +37,69 @@ interface DetailsProps {
     redirectWhatsapp: () => void;
 }
 
-const CustomCardFooter = ({ card, delivery, pix, redirectWhatsapp, sizeChip, sizeImage, smDownScreen }: CustomCardFooterProps) => (
-    <Box
-        alignItems='center'
-        display='flex'
-        flexDirection={smDownScreen ? 'row-reverse' : 'row'}
-        justifyContent='space-between'
-        padding={2}
-        width='100%'
-    >
-        <Stack flexDirection={smDownScreen ? 'row-reverse' : 'row'} gap={1} alignItems='center'>
-            {
-                pix && (
-                    <Tooltip title='Aceita pagamento via PIX'>
-                        <CardMedia
-                            alt='Pagamento via PIX'
-                            component='img'
-                            image='/pix.png'
-                            sx={{ cursor: 'pointer', width: sizeImage }}
-                        />
-                    </Tooltip>
-                )
-            }
-            {
-                card && (
-                    <Tooltip title='Aceita pagamento via cartão crédito/débito'>
-                        <CardMedia
-                            alt='Pagamento via cartão'
-                            component='img'
-                            image='/credit-card.png'
-                            sx={{ cursor: 'pointer', width: sizeImage }}
-                        />
-                    </Tooltip>
-                )
-            }
-            {
-                delivery && (
-                    <Tooltip title='Realiza entregas*'>
-                        <CardMedia
-                            alt='É possível combinar a entrega'
-                            component='img'
-                            image='/delivery.png'
-                            sx={{ cursor: 'pointer', width: sizeImage }}
-                        />
-                    </Tooltip>
-                )
-            }
-        </Stack>
-        <Tooltip title='Chamar no Whatsapp'>
-            <Button
-                color='success'
-                endIcon={<WhatsApp />}
-                onClick={redirectWhatsapp}
-                size={sizeChip}
-                variant='contained'
-            >
-                Whatsapp
-            </Button>
-        </Tooltip>
-    </Box>
-)
+function CustomCardFooter({ handleDetails, infoMarket, sizeChip, sizeImage, smDownScreen }: CustomCardFooterProps) {
+    const { card, delivery, pix } = infoMarket;
+    return (
+        <Box
+            alignItems='center'
+            display='flex'
+            flexDirection={smDownScreen ? 'row-reverse' : 'row'}
+            justifyContent='space-between'
+            padding={2}
+            width='100%'
+        >
+            <Stack flexDirection={smDownScreen ? 'row-reverse' : 'row'} gap={1} alignItems='center'>
+                {
+                    pix && (
+                        <Tooltip title='Aceita pagamento via PIX'>
+                            <CardMedia
+                                alt='Pagamento via PIX'
+                                component='img'
+                                image='/pix.png'
+                                sx={{ cursor: 'help', width: sizeImage }}
+                            />
+                        </Tooltip>
+                    )
+                }
+                {
+                    card && (
+                        <Tooltip title='Aceita pagamento via cartão crédito/débito'>
+                            <CardMedia
+                                alt='Pagamento via cartão'
+                                component='img'
+                                image='/credit-card.png'
+                                sx={{ cursor: 'help', width: sizeImage }}
+                            />
+                        </Tooltip>
+                    )
+                }
+                {
+                    delivery && (
+                        <Tooltip title='Realiza entregas*'>
+                            <CardMedia
+                                alt='É possível combinar a entrega'
+                                component='img'
+                                image='/delivery.png'
+                                sx={{ cursor: 'help', width: sizeImage }}
+                            />
+                        </Tooltip>
+                    )
+                }
+            </Stack>
+            <Tooltip title='Abrir detalhes'>
+                <Button
+                    color='success'
+                    endIcon={<Visibility />}
+                    onClick={handleDetails}
+                    size={sizeChip}
+                    variant='contained'
+                >
+                    Detalhes
+                </Button>
+            </Tooltip>
+        </Box>
+    )
+}
 
 export function CustomMenu({ smDownScreen }: CustomMenuProps) {
     return smDownScreen ? (
@@ -137,29 +134,23 @@ export function ChipCategorie({ label, filtercategorie, selected }: ChipCategori
     return (
         <Chip
             clickable
-            color={selected === label ? 'info' : 'default'}
             size='medium'
             label={label}
-            variant={selected === label ? 'filled' : 'outlined'}
+            variant={'outlined'}
             onClick={filtercategorie}
+            sx={{
+                border: selected === label ? 3 : 'default',
+                borderColor: selected === label ? (theme) => theme.palette.info.main : 'default'
+            }}
         />
     )
 }
 
-export function CustomCard({ details, market, redirectWhatsapp, smDownScreen }: CustomCardProps) {
-    const { card, customName, daysWorking, delivery, pix, products } = market;
+export function CustomCard({ infoMarket, handleDetails, smDownScreen }: CustomCardProps) {
     const sizeChip = smDownScreen ? 'small' : 'medium';
+    const { customName, products } = infoMarket;
     const [categories, setCategories] = useState<Array<string>>([]);
-    const extractCategories = () => {
-        const list: Array<string> = [];
-        products.forEach((item) => {
-            const indexOf = item.indexOf('-');
-            list.push(item.slice(0, indexOf));
-        });
-        const listCategories = [...new Set(list)];
-        setCategories(orderArrayString(listCategories));
-    }
-    useEffect(() => { extractCategories(); }, []);
+    useEffect(() => { setCategories(ExtractCategories(products)); }, []);
 
     return (
         <Card
@@ -170,7 +161,13 @@ export function CustomCard({ details, market, redirectWhatsapp, smDownScreen }: 
         >
             <Box display='flex' flexDirection='column' width='100%'>
                 <CardContent component={Box} flex={1}>
-                    <Typography fontWeight={500} variant='h5' sx={{ cursor: 'pointer' }}>
+                    <Typography
+                        component={Box}
+                        fontWeight={500}
+                        onClick={handleDetails}
+                        variant='h5'
+                        sx={{ cursor: 'pointer' }}
+                    >
                         {customName.toUpperCase()}
                     </Typography>
                     <Stack
@@ -183,32 +180,23 @@ export function CustomCard({ details, market, redirectWhatsapp, smDownScreen }: 
                         rowGap={1}
                     >
                         {
-                            categories.slice(0, 3).map((item, index) => <Chip clickable color='info' key={index} label={item} size={sizeChip} />)
+                            categories.slice(0, 3).map((item, index) => <Chip clickable color='default' key={index} label={item} size={sizeChip} />)
                         }
                         <Tooltip title='Ver mais informações'>
                             <Button
                                 color='info'
                                 endIcon={<Loupe />}
-                                onClick={details}
+                                onClick={handleDetails}
                                 size={sizeChip}
                             >
                                 Ver Mais
                             </Button>
                         </Tooltip>
                     </Stack>
-                    {
-                        !smDownScreen && (
-                            <Typography fontWeight={500} variant='caption' sx={{ cursor: 'default' }}>
-                                {`Atende ${daysWorking.replaceAll(',', ', ')}`}
-                            </Typography>
-                        )
-                    }
                 </CardContent>
                 <CustomCardFooter
-                    card={card}
-                    delivery={delivery}
-                    pix={pix}
-                    redirectWhatsapp={redirectWhatsapp}
+                    handleDetails={handleDetails}
+                    infoMarket={infoMarket}
                     sizeChip={sizeChip}
                     sizeImage={smDownScreen ? 30 : 50}
                     smDownScreen={smDownScreen}

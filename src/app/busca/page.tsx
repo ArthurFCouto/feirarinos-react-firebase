@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import {
     Box, Container, CssBaseline,
-    Divider, IconButton, InputBase, LinearProgress, Paper,
+    Divider, IconButton, InputBase, Paper,
     Stack, Typography, useMediaQuery
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -13,7 +13,10 @@ import logo from '../favicon.ico';
 import { ChipCategorie, CustomCard, CustomMenu, Details } from '@/components/busca';
 import { Footer } from '@/components/ui';
 import firebase, { Market } from '@/config/firebase';
-import { orderArrayString } from '@/util';
+import { OrderArrayString } from '@/util';
+import { Player } from '@lottiefiles/react-lottie-player';
+import search from '../../util/lottiefiles/search.json';
+import empty from '../../util/lottiefiles/empty.json';
 
 const emptyMessage = 'Não encontramos resultados para exibir.';
 
@@ -27,6 +30,7 @@ export default function Busca() {
     const [loading, setLoading] = useState(true);
     const smDownScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const sizeImage = smDownScreen ? 30 : 50;
+    const sizeAnimation = smDownScreen ? '200px' : '300px';
     const [selectedCategory, setSelectedCategory] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [marketList, setMarketList] = useState<Array<Market>>([]);
@@ -86,7 +90,7 @@ export default function Busca() {
                 datacategoryList.push(doc.data().name.slice(0, indexOf));
             });
             const listcategoryList = [...new Set(datacategoryList)];
-            setCategoryList(orderArrayString(listcategoryList));
+            setCategoryList(OrderArrayString(listcategoryList));
             getmarketListByFilter('');
         } catch (error) {
             console.log('Firebase Error', error);
@@ -146,7 +150,7 @@ export default function Busca() {
                         <InputBase
                             id='search'
                             name='search'
-                            placeholder='Busque por nome, categoria ou feirante'
+                            placeholder='Busque por produto, categoria ou feirante'
                             sx={{
                                 flex: 1,
                                 marginLeft: 1
@@ -196,13 +200,27 @@ export default function Busca() {
                     }
                     <Divider />
                     {
-                        loading ? <LinearProgress sx={{ marginTop: 2 }} />
+                        loading ?
+                            <Player
+                                autoplay
+                                keepLastFrame
+                                src={search}
+                                style={{ height: sizeAnimation, width: sizeAnimation }}
+                            />
                             : marketList.length === 0 ?
-                                <Typography variant='h6'>{emptyMessage}</Typography>
+                                <>
+                                    <Typography variant='h6'>{emptyMessage}</Typography>
+                                    <Player
+                                        autoplay
+                                        keepLastFrame
+                                        src={empty}
+                                        style={{ height: sizeAnimation, width: sizeAnimation }}
+                                    />
+                                </>
                                 :
                                 <>
                                     {
-                                        marketList.map((market, index) => <CustomCard key={index} market={market} details={() => handleDetails(market)} redirectWhatsapp={() => window.open(`https://api.whatsapp.com/send?phone=55${market.phone}`)} smDownScreen={smDownScreen} />)
+                                        marketList.map((market, index) => <CustomCard key={index} infoMarket={market} handleDetails={() => handleDetails(market)} /*redirectWhatsapp={() => window.open(`https://api.whatsapp.com/send?phone=55${market.phone}`)}*/ smDownScreen={smDownScreen} />)
                                     }
                                 </>
                     }

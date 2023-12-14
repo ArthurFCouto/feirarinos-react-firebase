@@ -9,16 +9,16 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_APP_ID
 };
 
-export const messageError = (message: string)=> {
+export const messageError = (message: string) => {
   let response = 'Houve um erro inesperado, tente mais tarde.';
   const errors = {
-  'auth/invalid-login-credentials': 'Usuário/Senha incorreta',
-  'auth/invalid-email': 'Favor informar um email válido.',
-  'auth/email-already-in-use': 'Este e-mail já esta sendo utilizado',
-  'auth/weak-password': 'A senha deve ter no mínimo 6 caracteres'
+    'auth/invalid-login-credentials': 'Usuário/Senha incorreta',
+    'auth/invalid-email': 'Favor informar um email válido.',
+    'auth/email-already-in-use': 'Este e-mail já está sendo utilizado.',
+    'auth/weak-password': 'A senha deve ter no mínimo 6 caracteres.'
   }
   for (const [key, value] of Object.entries(errors)) {
-    if(key === message) {
+    if (key === message) {
       response = value;
       break
     }
@@ -26,7 +26,7 @@ export const messageError = (message: string)=> {
   return response;
 }
 
-export interface CustomUser{
+export interface CustomUser {
   name: string;
   email: string;
   password: string;

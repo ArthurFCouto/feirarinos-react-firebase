@@ -11,7 +11,7 @@ import {
     Switch, TextField, Typography
 } from '@mui/material'
 import { ExpandMore, Visibility, VisibilityOff } from '@mui/icons-material';
-import { phoneMask } from '@/util';
+import { PhoneMask } from '@/util';
 
 export type CustomObject = {
     categoria: string,
@@ -97,7 +97,7 @@ export function FormUser({ onSubmitUser }: FormUserProps) {
                                 id='phone'
                                 label='WhatsApp'
                                 name='phone'
-                                onChange={(e) => { e.target.value = phoneMask(e.target.value) }}
+                                onChange={(e) => { e.target.value = PhoneMask(e.target.value) }}
                                 required
                             />
                         </Grid>

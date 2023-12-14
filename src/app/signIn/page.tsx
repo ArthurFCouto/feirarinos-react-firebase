@@ -13,6 +13,7 @@ import { AccountBox, CloseSharp } from '@mui/icons-material';
 import { Footer } from '@/components/ui';
 import { CustomObject, FormUser, FormMarket, FormProduct, CustomUserForm, CustomMarketForm } from '@/components/signIn';
 import firebase, { Market, CustomUser, messageError } from '@/config/firebase';
+import { OrderArrayString } from '@/util';
 
 interface PropsAlert {
   open: boolean,
@@ -149,7 +150,7 @@ export default function SignIn() {
       setLoading(false);
       return;
     }
-    const listCategoryProducts: Array<CustomObject> = [...new Set(categorias)].map((categoria) => {
+    const listCategoryProducts: Array<CustomObject> = [...new Set(OrderArrayString(categorias))].map((categoria) => {
       return {
         categoria,
         produtos: []
