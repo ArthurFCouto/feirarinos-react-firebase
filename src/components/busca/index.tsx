@@ -242,24 +242,32 @@ export function Details({ market, customProducts, onClose, open, redirectWhatsap
                 </Typography>
             </DialogTitle>
             <DialogContent>
-                <Typography >Atendemos você {market?.daysWorking.split(',').map((label, index) => <Chip color='primary' key={index} variant='filled' label={label} size='small'/>)}</Typography>
-                {market?.delivery ?? (<Typography>E também fazemos entrega</Typography>)}
+                <Typography >Atendimento 
+                    {
+                        market?.daysWorking.split(',').map((label, index) => <Chip color='primary' key={index} variant='filled' label={label} size='small' sx={{ marginLeft: index == 0 ? 1 : 0, marginRight: 1 }} />)
+                    }
+                </Typography>
+                {
+                    market?.delivery ?? (
+                        <Typography>E também fazemos entrega!</Typography>
+                    )
+                }
                 <Divider variant='fullWidth' sx={{ marginY: 2 }} />
                 <Typography gutterBottom>Confira abaixo todos os nossos produtos</Typography>
                 {
                     customProducts?.map((item, index) =>
                         <Accordion
                             key={index}
-                            expanded={expandedAccordion === item.categoria}
+                            expanded={expandedAccordion == item.categoria}
                             onChange={handleChangeAccordion(item.categoria)}
-                            sx={{ marginTop: index === 0 ? 2 : 0 }}
+                            sx={{ marginTop: index == 0 ? 2 : 0 }}
                         >
                             <AccordionSummary
                                 expandIcon={<ExpandMore />}
                                 aria-controls='panel1bh-content'
                                 id='panel1bh-header'
                             >
-                                <Typography sx={{ width: '33%', flexShrink: 0 }}>{item.categoria}</Typography>
+                                <Typography sx={{ flexShrink: 0 }}>{item.categoria}</Typography>
                             </AccordionSummary>
                             <AccordionDetails>
                                 <Stack flexDirection='row' gap={1} flexWrap='wrap'>
